@@ -36,10 +36,4 @@ export class LoginComponent implements OnInit {
       password: this.loginForm.value.password
     });
   }
-
-  // ngOnDestroy() {
-  //   if (this.loadingSubs) {
-  //     this.loadingSubs.unsubscribe();
-  //   }
-  // }
 }
