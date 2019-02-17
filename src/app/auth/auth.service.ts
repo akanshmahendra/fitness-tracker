@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subject } from 'rxjs';
 import { AngularFireAuth } from 'angularfire2/auth';
 import { Store } from '@ngrx/store';
 
@@ -9,11 +8,10 @@ import { TrainingService } from '../training/training.service';
 import { UIService } from '../shared/ui.service';
 import * as fromRoot from '../app.reducer';
 import * as UI from '../shared/ui.actions';
+import * as fromAuth from '../auth/auth.actions';
 
 @Injectable()
 export class AuthService {
-  authChange = new Subject<boolean>();
-  private isAuthenticated = false;
 
   constructor(
     private router: Router,
@@ -26,14 +24,12 @@ export class AuthService {
   initAuthListener() {
     this.afAuth.authState.subscribe(user => {
       if (user) {
-        this.isAuthenticated = true;
-        this.authChange.next(true);
+        this.store.dispatch(new fromAuth.SetAuthenticated());
         this.router.navigate(['/training']);
       } else {
         this.trainingService.cancelSubscriptions();
-        this.authChange.next(false);
+        this.store.dispatch(new fromAuth.SetUnauthenticated());
         this.router.navigate(['/login']);
-        this.isAuthenticated = false;
       }
     });
   }
@@ -42,7 +38,7 @@ export class AuthService {
     this.store.dispatch(new UI.StartLoading());
     this.afAuth.auth
       .createUserWithEmailAndPassword(authData.email, authData.password)
-      .then(result => {
+      .then(() => {
         this.store.dispatch(new UI.StopLoading());
       })
       .catch(error => {
@@ -55,7 +51,7 @@ export class AuthService {
     this.store.dispatch(new UI.StartLoading());
     this.afAuth.auth
       .signInWithEmailAndPassword(authData.email, authData.password)
-      .then(result => {
+      .then(() => {
         this.store.dispatch(new UI.StopLoading());
       })
       .catch(error => {
@@ -66,9 +62,5 @@ export class AuthService {
 
   logout() {
     this.afAuth.auth.signOut();
-  }
-
-  isAuth() {
-    return this.isAuthenticated;
   }
 }
